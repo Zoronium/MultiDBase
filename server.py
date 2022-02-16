@@ -7,15 +7,43 @@ import threading
 FORMAT = 'utf-8'
 HOST = 'localhost'
 PORT = 12345
-
-print_lock = threading.Lock()
 temp_file = {}
 
+print_lock = threading.Lock()
+check = False
+
+
+class EXecut(object):
+    def get(self, key):
+        return temp_file[key]
+
+    def mget(self, list):
+        for i in list:
+            return temp_file[i]
+
+    def set(self, key, value):
+        temp_file[key] = value
+        return temp_file
+
+    def mset(self, list):
+        for key , value in list:
+            temp_file[key] = value
+            return temp_file
+
+    def delete(self, key, value):
+        del temp_file[key]
+        return temp_file
+
+    def flush(self):
+        temp_file = {}
+        return temp_file
+
+
 perf_act = {
-    'GET':"print('get')" ,  'MGET':"print('mget')",    # multi get
-    'SET': "print('set')", 'MSET':"print('mset')" ,    # multi set
-    'FLUSH':"print('flush')" ,  # drop database
-    "DELETE" :"print('delete')"  # del key value
+    'GET': EXecut.get,   'MGET':EXecut.mget,    # multi get
+    'SET': EXecut.set, 'MSET': EXecut.mset,    # multi set
+    'FLUSH': EXecut.flush,  # drop database
+    'DELETE': EXecut.delete  # del key value
 }
 prfix = {  # to add the working here
     '$': 'handler_binary',
@@ -26,19 +54,21 @@ prfix = {  # to add the working here
     '+': 'handler_string', }
 
 
-def tempfun(object): 
-    f = object[0]
-    if not object : print( " disconected ")
+def check_handler(object):
+    if not object:
+        print(" disconected ")
     list = object.split()
+    print('==================')
     if list[0] in perf_act:
-        eval(perf_act[list[0]])
-    else: print(" COMMAND_ERR : command not found ")
-
+        print("==============")
+    
+    else:
+        print(" COMMAND_ERR : command not found ")
 # thread function
+
 
 def threaded(c):
     while True:
-
         # data received from client
         data = c.recv(1024)
         if not data:
@@ -46,10 +76,13 @@ def threaded(c):
             # lock released on exit
             print_lock.release()
             break
+
+        check_handler(str(data.decode(FORMAT)))
         # send back reversed string to client
+
         c.send(data)
         print(data)
-        # tempfun(data.decode(FORMAT))
+
     # connection closed
     c.close()
 
