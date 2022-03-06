@@ -46,6 +46,7 @@ perf_act = {
     'SET': EXecut.set, 'MSET': EXecut.mset,    # multi set
     'FLUSH': EXecut.flush,  # drop database
     'DELETE': EXecut.delete  # del key value
+
 }
 prfix = {  # to add the working here
     '$': 'handler_binary',
@@ -54,6 +55,7 @@ prfix = {  # to add the working here
     '*': 'handler_array',
     '%': 'handler_dict',
     '+': 'handler_string', }
+
 
 
 def check_handler(object):
@@ -77,11 +79,13 @@ def threaded(connecection):
     while True:
         # data received from client
         data = connecection.recv(1024)
+
         if not data:
             print('Bye')
             # lock released on exit
             print_lock.release()
             break
+
 
         print (check_handler(str(data.decode(FORMAT))))
         # send back reversed string to client
@@ -97,6 +101,7 @@ def Main():
     # reverse a port on your computer
     # in our case it is 12345 but it
     # can be anything
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind((host, port))
         print("socket binded to port", port)
@@ -108,11 +113,13 @@ def Main():
         while True:
             # establish connection with client
             connecection, addr = sock.accept()
+
             # lock acquired by client
             print_lock.acquire()
             print('Connected to :', addr[0], ':', addr[1])
             # Start a new thread and return its identifier
             start_new_thread(threaded, (connecection,))
+
 
 
 if __name__ == '__main__':
